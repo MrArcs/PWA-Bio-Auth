@@ -5,19 +5,21 @@
  * For this POC, we are simulating the verification locally.
  */
 
-// Helper to convert string to ArrayBuffer
-const coerceToArrayBuffer = (str: string): ArrayBuffer => {
-  return new TextEncoder().encode(str).buffer;
+// --- Helpers for base64url encoding/decoding of credential IDs ---
+const bufferToBase64Url = (buffer: ArrayBuffer): string => {
+  return btoa(String.fromCharCode(...new Uint8Array(buffer)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 };
 
-// Helper to convert ArrayBuffer to Base64 (for storage)
-const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
+const base64UrlToBuffer = (base64url: string): ArrayBuffer => {
+  const padded = base64url.replace(/-/g, '+').replace(/_/g, '/')
+    + '='.repeat((4 - (base64url.length % 4)) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
 };
 
 export const webAuthnService = {
@@ -59,7 +61,8 @@ export const webAuthnService = {
     if (!credential) throw new Error("Registration failed");
 
     return {
-      credentialId: credential.id,
+      // Store the rawId as base64url so it can be round-tripped for allowCredentials
+      credentialId: bufferToBase64Url(credential.rawId),
       publicKey: "SIMULATED_PUBLIC_KEY", // In a real app, this would be exported from the credential
     };
   },
@@ -67,11 +70,18 @@ export const webAuthnService = {
   login: async (storedCredentialId: string): Promise<boolean> => {
     const challenge = crypto.getRandomValues(new Uint8Array(32));
     
-    // Decode credentialId from base64 if needed, though raw ID usually works fine for get()
-    // Convert string ID to buffer if needed, but WebAuthn .get() expects allowCredentials.id as ArrayBuffer
+    // WebAuthn .get() expects allowCredentials.id as ArrayBuffer (rawId)
+    let rawId: ArrayBuffer;
+    try {
+      rawId = base64UrlToBuffer(storedCredentialId);
+    } catch {
+      // Fallback for any legacy stored plain strings (may still fail on some platforms)
+      rawId = new TextEncoder().encode(storedCredentialId).buffer;
+    }
+
     const allowCredentials: PublicKeyCredentialDescriptor[] = [
       {
-        id: coerceToArrayBuffer(storedCredentialId),
+        id: rawId,
         type: "public-key",
         transports: ["internal"],
       },

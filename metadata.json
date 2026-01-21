@@ -1,0 +1,7 @@
+{
+  "name": "Minimal Biometric PWA",
+  "description": "A proof-of-concept React PWA featuring biometric authentication and real-time mapping in a minimal black-and-white aesthetic.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

@@ -15,6 +15,17 @@ View your app in AI Studio: https://ai.studio/apps/drive/1zb2rqxnmbBDys_VlAtp4Ln
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+2. Create your env file:
+   - Copy `sample.env` to `.env.local`
+   - Set `GEMINI_API_KEY` inside `.env.local`
 3. Run the app:
    `npm run dev`
+
+## URLs
+
+- **Local (dev server)**: `https://localhost:3000`
+- **Production (Vercel)**: `https://pwa-bio-auth.vercel.app/`
+
+## Production env (Vercel)
+
+Set `GEMINI_API_KEY` as an environment variable in your Vercel project settings (don’t commit secrets into the repo).

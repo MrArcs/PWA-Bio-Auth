@@ -1,12 +1,11 @@
 
 import React, { useEffect, useRef, useState } from 'react';
+import L from 'leaflet';
 import { UserProfile, LocationPoint } from '../types';
 
 interface DashboardProps {
   user: UserProfile;
 }
-
-declare const L: any; // Leaflet is loaded via script tag in index.html
 
 const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const mapRef = useRef<HTMLDivElement>(null);
